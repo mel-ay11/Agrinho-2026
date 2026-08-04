@@ -1,12 +1,13 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Portal AGRINHO 2026: tecnologia, produção agrícola e sustentabilidade no campo.">
     <title>AGRINHO 2026 | Agro forte, futuro sustentável</title>
-    <!-- Adicione aqui o link para o seu arquivo CSS quando estiver pronto -->
-    <!-- <link rel="stylesheet" href="style.css"> -->
+    
+    <!-- Estilos -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -22,6 +23,7 @@
                 <li><a href="#futuro">Futuro</a></li>
                 <li><a href="#contato">Contato</a></li>
             </ul>
+            <button id="alternar-tema" type="button" aria-pressed="false">🌙 Modo Escuro</button>
         </nav>
     </header>
 
@@ -104,7 +106,7 @@
         <section id="contato">
             <h2>Contato</h2>
             <p>Envie sua sugestão ou dúvida sobre o projeto!</p>
-            <form action="#" method="post">
+            <form id="form-contato" action="#" method="post">
                 <label for="nome">Nome:</label>
                 <input type="text" id="nome" name="nome" placeholder="Digite seu nome" required>
                 
@@ -126,5 +128,7 @@
         <p>Agro forte, futuro sustentável 🌱</p>
     </footer>
 
+    <!-- Scripts -->
+    <script src="script.js"></script>
 </body>
 </html>
