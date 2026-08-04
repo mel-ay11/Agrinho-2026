@@ -1,202 +1,248 @@
 /**
- * AGRINHO 2026 - Script principal
- * Funcionalidades: Validação de formulário, navegação suave e modo escuro
+ * AGRINHO 2026 - Script Principal (Versão Avançada)
+ * 
+ * Funcionalidades:
+ * ✅ Validação de formulário com debounce
+ * ✅ Notificações toast (substitui alertas)
+ * ✅ Navegação suave com scroll spy
+ * ✅ Modo escuro com detecção automática do sistema
+ * ✅ Animações on scroll (Intersection Observer)
+ * ✅ Botão "voltar ao topo"
+ * ✅ Loading state no envio do formulário
+ * ✅ Acessibilidade aprimorada
  */
 
-document.addEventListener("DOMContentLoaded", () => {
-    inicializarFormulario();
-    inicializarNavegacaoSuave();
-    inicializarModoEscuro();
-});
+const AgrinhoApp = (() => {
+    'use strict';
 
-// ============================================
-// 1. VALIDAÇÃO DO FORMULÁRIO DE CONTATO
-// ============================================
-function inicializarFormulario() {
-    const form = document.querySelector("#form-contato");
-    if (!form) return;
+    // ============================================
+    // CONFIGURAÇÕES
+    // ============================================
+    const CONFIG = {
+        temaStorageKey: 'tema-agrinho',
+        scrollOffset: 100,
+        debounceDelay: 300,
+        notificacaoDuracao: 3500,
+        animacaoThreshold: 0.15
+    };
 
-    form.addEventListener("submit", (event) => {
-        event.preventDefault();
-        
-        const nome = document.querySelector("#nome");
-        const email = document.querySelector("#email");
-        const mensagem = document.querySelector("#mensagem");
+    // ============================================
+    // UTILITÁRIOS
+    // ============================================
+    const Utils = {
+        debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        },
 
-        // Validações
-        if (validarCampos(nome, email, mensagem)) {
-            enviarMensagem(nome.value);
-            form.reset();
-            limparErros();
+        validarEmail(email) {
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return regex.test(email);
         }
-    });
+    };
 
-    // Validação em tempo real ao sair do campo (blur)
-    [document.querySelector("#nome"), document.querySelector("#email"), document.querySelector("#mensagem")]
-        .forEach(campo => {
-            if (campo) {
-                campo.addEventListener("blur", () => validarCampo(campo));
-            }
-        });
-}
+    // ============================================
+    // SISTEMA DE NOTIFICAÇÕES (TOAST)
+    // ============================================
+    const Notificacao = {
+        container: null,
 
-/**
- * Valida se todos os campos estão preenchidos corretamente
- */
-function validarCampos(nome, email, mensagem) {
-    let valido = true;
+        init() {
+            this.container = document.createElement('div');
+            this.container.className = 'notificacoes-container';
+            document.body.appendChild(this.container);
+        },
 
-    if (!nome.value.trim()) {
-        mostrarErro(nome, "O nome é obrigatório.");
-        valido = false;
-    }
+        mostrar(mensagem, tipo = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${tipo}`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'polite');
 
-    if (!email.value.trim()) {
-        mostrarErro(email, "O e-mail é obrigatório.");
-        valido = false;
-    } else if (!validarEmail(email.value)) {
-        mostrarErro(email, "Digite um e-mail válido.");
-        valido = false;
-    }
+            const icones = {
+                sucesso: '✅',
+                erro: '⚠️',
+                info: 'ℹ️',
+                aviso: '⚡'
+            };
 
-    if (!mensagem || !mensagem.value.trim()) {
-        if (mensagem) {
-            mostrarErro(mensagem, "A mensagem é obrigatória.");
-            valido = false;
+            toast.innerHTML = `
+                <span class="toast-icone">${icones[tipo] || '💬'}</span>
+                <span class="toast-mensagem">${mensagem}</span>
+                <button class="toast-fechar" aria-label="Fechar notificação">&times;</button>
+            `;
+
+            const btnFechar = toast.querySelector('.toast-fechar');
+            btnFechar.addEventListener('click', () => this.fechar(toast));
+
+            this.container.appendChild(toast);
+
+            // Animação de entrada
+            requestAnimationFrame(() => toast.classList.add('toast-visivel'));
+
+            // Fecha automaticamente
+            setTimeout(() => this.fechar(toast), CONFIG.notificacaoDuracao);
+        },
+
+        fechar(toast) {
+            toast.classList.remove('toast-visivel');
+            toast.classList.add('toast-fechando');
+            setTimeout(() => toast.remove(), 300);
         }
-    }
+    };
 
-    if (!valido) {
-        alert("⚠️ Por favor, corrija os erros destacados.");
-    }
+    // ============================================
+    // FORMULÁRIO DE CONTATO
+    // ============================================
+    const Formulario = {
+        form: null,
 
-    return valido;
-}
+        init() {
+            this.form = document.querySelector('#form-contato');
+            if (!this.form) return;
 
-/**
- * Valida o formato do e-mail com regex
- */
-function validarEmail(email) {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-}
+            this.form.addEventListener('submit', (e) => this.handleSubmit(e));
 
-/**
- * Mostra mensagem de erro abaixo do campo
- */
-function mostrarErro(campo, mensagem) {
-    limparErro(campo);
-    campo.classList.add("erro");
-    const span = document.createElement("span");
-    span.classList.add("mensagem-erro");
-    span.textContent = mensagem;
-    campo.parentNode.insertBefore(span, campo.nextSibling);
-}
+            // Validação em tempo real com debounce
+            const campos = ['#nome', '#email', '#mensagem'];
+            campos.forEach(seletor => {
+                const campo = document.querySelector(seletor);
+                if (campo) {
+                    const validar = Utils.debounce(() => this.validarCampo(campo), CONFIG.debounceDelay);
+                    campo.addEventListener('input', validar);
+                    campo.addEventListener('blur', () => this.validarCampo(campo));
+                }
+            });
+        },
 
-/**
- * Remove erro de um campo específico
- */
-function limparErro(campo) {
-    campo.classList.remove("erro");
-    const erro = campo.parentNode.querySelector(".mensagem-erro");
-    if (erro) erro.remove();
-}
-
-/**
- * Remove todos os erros do formulário
- */
-function limparErros() {
-    document.querySelectorAll(".mensagem-erro").forEach(el => el.remove());
-    document.querySelectorAll(".erro").forEach(el => el.classList.remove("erro"));
-}
-
-/**
- * Valida um único campo (usado no blur)
- */
-function validarCampo(campo) {
-    if (campo.id === "email" && campo.value.trim()) {
-        if (!validarEmail(campo.value)) {
-            mostrarErro(campo, "E-mail inválido.");
-        } else {
-            limparErro(campo);
-        }
-    } else if (campo.value.trim() === "") {
-        mostrarErro(campo, "Campo obrigatório.");
-    } else {
-        limparErro(campo);
-    }
-}
-
-/**
- * Exibe mensagem de sucesso
- */
-function enviarMensagem(nome) {
-    alert(`✅ Obrigado pela mensagem, ${nome}! Em breve retornaremos.`);
-}
-
-// ============================================
-// 2. NAVEGAÇÃO SUAVE (SMOOTH SCROLL)
-// ============================================
-function inicializarNavegacaoSuave() {
-    const linksMenu = document.querySelectorAll("nav a");
-    
-    linksMenu.forEach(link => {
-        link.addEventListener("click", (event) => {
-            const href = link.getAttribute("href");
-            
-            // Só aplica scroll suave se for âncora interna (começa com #)
-            if (!href || !href.startsWith("#")) return;
-            
+        async handleSubmit(event) {
             event.preventDefault();
-            const elementoAlvo = document.querySelector(href);
-            
-            if (elementoAlvo) {
-                elementoAlvo.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                });
-                
-                // Atualiza a URL sem recarregar
-                history.pushState(null, null, href);
+
+            const nome = document.querySelector('#nome');
+            const email = document.querySelector('#email');
+            const mensagem = document.querySelector('#mensagem');
+
+            if (!this.validarTodosCampos(nome, email, mensagem)) {
+                Notificacao.mostrar('Corrija os campos destacados para continuar.', 'erro');
+                return;
             }
-        });
-    });
-}
 
-// ============================================
-// 3. MODO ESCURO (DARK MODE)
-// ============================================
-function inicializarModoEscuro() {
-    const botaoTema = document.querySelector("#alternar-tema");
-    if (!botaoTema) return;
+            // Simula envio (você pode integrar com Formspree/EmailJS)
+            this.setLoading(true);
 
-    // Carrega preferência salva no localStorage
-    const temaSalvo = localStorage.getItem("tema-agrinho");
-    if (temaSalvo === "dark") {
-        ativarModoEscuro(botaoTema);
-    }
+            await this.simularEnvio();
 
-    botaoTema.addEventListener("click", () => {
-        const estaEscuro = document.body.classList.toggle("dark-mode");
-        
-        if (estaEscuro) {
-            ativarModoEscuro(botaoTema);
-            localStorage.setItem("tema-agrinho", "dark");
-        } else {
-            desativarModoEscuro(botaoTema);
-            localStorage.setItem("tema-agrinho", "light");
+            Notificacao.mostrar(`Obrigado ${nome.value.split(' ')[0]}! Sua mensagem foi enviada. 🌱`, 'sucesso');
+            this.form.reset();
+            this.limparErros();
+            this.setLoading(false);
+        },
+
+        validarCampo(campo) {
+            this.limparErroCampo(campo);
+
+            if (campo.id === 'email' && campo.value.trim()) {
+                if (!Utils.validarEmail(campo.value)) {
+                    this.mostrarErroCampo(campo, 'Digite um e-mail válido (ex: nome@exemplo.com)');
+                    return false;
+                }
+            }
+
+            if (campo.id === 'nome' && campo.value.trim().length < 2) {
+                this.mostrarErroCampo(campo, 'Nome deve ter pelo menos 2 caracteres.');
+                return false;
+            }
+
+            if (campo.id === 'mensagem' && campo.value.trim().length < 10) {
+                this.mostrarErroCampo(campo, 'A mensagem deve ter pelo menos 10 caracteres.');
+                return false;
+            }
+
+            if (!campo.value.trim()) {
+                this.mostrarErroCampo(campo, 'Campo obrigatório.');
+                return false;
+            }
+
+            return true;
+        },
+
+        validarTodosCampos(nome, email, mensagem) {
+            const validacoes = [
+                this.validarCampo(nome),
+                this.validarCampo(email),
+                this.validarCampo(mensagem)
+            ];
+            return validacoes.every(v => v);
+        },
+
+        mostrarErroCampo(campo, mensagem) {
+            campo.classList.add('campo-erro');
+            const span = document.createElement('span');
+            span.className = 'mensagem-erro';
+            span.textContent = mensagem;
+            campo.parentNode.insertBefore(span, campo.nextSibling);
+        },
+
+        limparErroCampo(campo) {
+            campo.classList.remove('campo-erro');
+            const erro = campo.parentNode.querySelector('.mensagem-erro');
+            if (erro) erro.remove();
+        },
+
+        limparErros() {
+            document.querySelectorAll('.mensagem-erro').forEach(el => el.remove());
+            document.querySelectorAll('.campo-erro').forEach(el => el.classList.remove('campo-erro'));
+        },
+
+        setLoading(estado) {
+            const btn = this.form.querySelector('button[type="submit"]');
+            if (!btn) return;
+
+            if (estado) {
+                btn.disabled = true;
+                btn.dataset.textoOriginal = btn.textContent;
+                btn.innerHTML = '<span class="spinner"></span> Enviando...';
+            } else {
+                btn.disabled = false;
+                btn.textContent = btn.dataset.textoOriginal || 'Enviar Sugestão';
+            }
+        },
+
+        simularEnvio() {
+            return new Promise(resolve => setTimeout(resolve, 1500));
         }
-    });
-}
+    };
 
-function ativarModoEscuro(botao) {
-    document.body.classList.add("dark-mode");
-    botao.textContent = "☀️ Modo Claro";
-    botao.setAttribute("aria-pressed", "true");
-}
+    // ============================================
+    // NAVEGAÇÃO SUAVE + SCROLL SPY
+    // ============================================
+    const Navegacao = {
+        init() {
+            this.configurarScrollSuave();
+            this.configurarScrollSpy();
+        },
 
-function desativarModoEscuro(botao) {
-    document.body.classList.remove("dark-mode");
-    botao.textContent = "🌙 Modo Escuro";
-    botao.setAttribute("aria-pressed", "false");
-}
+        configurarScrollSuave() {
+            document.querySelectorAll('nav a[href^="#"]').forEach(link => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const href = link.getAttribute('href');
+                    const alvo = document.querySelector(href);
+
+                    if (alvo) {
+                        alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        history.pushState(null, null, href);
+                    }
+                });
+            });
+        },
+
+        configurarScrollSpy() {
+            const secoes = document.querySelectorAll('main section[id]');
+            const linksMenu = document.querySelectorAll('nav a[href^="#"]');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
