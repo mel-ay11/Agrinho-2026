@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Portal AGRINHO 2026: tecnologia, produção agrícola e sustentabilidade no campo.">
     <title>AGRINHO 2026 | Agro forte, futuro sustentável</title>
-    <!-- Aqui você poderá adicionar o link para o seu arquivo CSS futuramente -->
+    <!-- Adicione aqui o link para o seu arquivo CSS quando estiver pronto -->
+    <!-- <link rel="stylesheet" href="style.css"> -->
 </head>
 <body>
 
+    <!-- ========== CABEÇALHO E NAVEGAÇÃO ========== -->
     <header>
-        <nav>
+        <nav aria-label="Menu principal">
             <h1>AGRINHO 2026</h1>
             <ul>
                 <li><a href="#inicio">Início</a></li>
@@ -22,48 +25,105 @@
         </nav>
     </header>
 
+    <!-- ========== CONTEÚDO PRINCIPAL ========== -->
     <main>
+
+        <!-- Seção de abertura -->
         <section id="inicio">
             <h2>Agro forte, futuro sustentável!</h2>
-            <p>Bem-vindo ao portal que une tecnologia e preservação no campo.</p>
+            <p>Bem-vindo ao portal que une tecnologia e preservação no campo. 
+               Aqui você vai descobrir como a agricultura brasileira pode produzir 
+               alimentos com responsabilidade ambiental.</p>
         </section>
 
+        <!-- Seção: Produção Agrícola -->
         <section id="producao">
             <h2>Produção Agrícola</h2>
-            <!-- Conteúdo sobre economia e tecnologias -->
+            <p>O Brasil é um dos maiores produtores de alimentos do mundo. 
+               A agricultura movimenta a economia e gera milhões de empregos, 
+               do plantio à colheita.</p>
+            <h3>Tecnologias no campo</h3>
+            <ul>
+                <li>Máquinas agrícolas modernas e precisas</li>
+                <li>Drones para monitoramento das lavouras</li>
+                <li>Sementes melhoradas e mais resistentes</li>
+                <li>Irrigação inteligente com economia de água</li>
+            </ul>
         </section>
 
+        <!-- Seção: Sustentabilidade -->
         <section id="sustentabilidade">
             <h2>Sustentabilidade</h2>
-            <!-- Conteúdo sobre práticas ecológicas -->
+            <p>Produzir preservando o meio ambiente é possível. 
+               Práticas sustentáveis garantem que as próximas gerações 
+               também tenham solo fértil, água limpa e biodiversidade.</p>
+            <h3>Práticas ecológicas</h3>
+            <ul>
+                <li>Rotação de culturas para recuperar o solo</li>
+                <li>Uso de adubos orgânicos e compostagem</li>
+                <li>Preservação de matas ciliares e nascentes</li>
+                <li>Controle biológico de pragas</li>
+            </ul>
         </section>
 
+        <!-- Seção: Desafios Ambientais -->
         <section id="desafios">
             <h2>Desafios Ambientais</h2>
-            <!-- Conteúdo sobre impacto e soluções -->
+            <p>A agricultura enfrenta grandes desafios, como mudanças climáticas, 
+               escassez de água e uso inadequado do solo. Conhecer esses problemas 
+               é o primeiro passo para enfrentá-los.</p>
+            <h3>Principais impactos</h3>
+            <ul>
+                <li>Desmatamento e perda de habitats</li>
+                <li>Uso excessivo de agrotóxicos</li>
+                <li>Desperdício de água na irrigação</li>
+            </ul>
+            <h3>Soluções possíveis</h3>
+            <ul>
+                <li>Fiscalização e cumprimento das leis ambientais</li>
+                <li>Educação ambiental no campo e na cidade</li>
+                <li>Incentivo à agricultura familiar sustentável</li>
+            </ul>
         </section>
 
+        <!-- Seção: Soluções e Futuro -->
         <section id="futuro">
             <h2>Soluções e Futuro</h2>
-            <!-- Conteúdo sobre inovações -->
+            <p>O futuro do agro é tecnológico e consciente. Inovações já estão 
+               transformando o campo e aproximando produção e preservação.</p>
+            <h3>Inovações que já são realidade</h3>
+            <ul>
+                <li>Agricultura de precisão com GPS e sensores</li>
+                <li>Energia solar nas propriedades rurais</li>
+                <li>Aplicativos que auxiliam o produtor</li>
+                <li>Reciclagem e reaproveitamento de resíduos</li>
+            </ul>
         </section>
 
+        <!-- Seção: Contato -->
         <section id="contato">
             <h2>Contato</h2>
+            <p>Envie sua sugestão ou dúvida sobre o projeto!</p>
             <form action="#" method="post">
                 <label for="nome">Nome:</label>
-                <input type="text" id="nome" name="nome" required>
+                <input type="text" id="nome" name="nome" placeholder="Digite seu nome" required>
                 
                 <label for="email">E-mail:</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" placeholder="seuemail@exemplo.com" required>
+                
+                <label for="mensagem">Mensagem:</label>
+                <textarea id="mensagem" name="mensagem" rows="4" placeholder="Escreva sua sugestão" required></textarea>
                 
                 <button type="submit">Enviar Sugestão</button>
             </form>
         </section>
+
     </main>
 
+    <!-- ========== RODAPÉ ========== -->
     <footer>
         <p>&copy; 2026 - Projeto Agrinho Sustentável</p>
+        <p>Agro forte, futuro sustentável 🌱</p>
     </footer>
 
 </body>
