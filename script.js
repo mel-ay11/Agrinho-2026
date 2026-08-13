@@ -1,53 +1,31 @@
 /**
- * AGRINHO 2026 - Script Principal (Versão Avançada)
- * 
- * Funcionalidades:
- * ✅ Validação de formulário com debounce
- * ✅ Notificações toast (substitui alertas)
- * ✅ Navegação suave com scroll spy
- * ✅ Modo escuro com detecção automática do sistema
- * ✅ Animações on scroll (Intersection Observer)
- * ✅ Botão "voltar ao topo"
- * ✅ Loading state no envio do formulário
- * ✅ Acessibilidade aprimorada
+ * AGRINHO 2026 🌸 — Script principal
  */
 
 const AgrinhoApp = (() => {
     'use strict';
 
-    // ============================================
-    // CONFIGURAÇÕES
-    // ============================================
     const CONFIG = {
         temaStorageKey: 'tema-agrinho',
-        scrollOffset: 100,
         debounceDelay: 300,
-        notificacaoDuracao: 3500,
-        animacaoThreshold: 0.15
+        toastDuracao: 3500
     };
 
-    // ============================================
-    // UTILITÁRIOS
-    // ============================================
     const Utils = {
-        debounce(func, wait) {
-            let timeout;
-            return function (...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
+        debounce(fn, espera) {
+            let t;
+            return (...args) => {
+                clearTimeout(t);
+                t = setTimeout(() => fn(...args), espera);
             };
         },
-
-        validarEmail(email) {
-            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return regex.test(email);
+        emailValido(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
     };
 
-    // ============================================
-    // SISTEMA DE NOTIFICAÇÕES (TOAST)
-    // ============================================
-    const Notificacao = {
+    // ===== NOTIFICAÇÕES TOAST =====
+    const Toast = {
         container: null,
 
         init() {
@@ -56,193 +34,234 @@ const AgrinhoApp = (() => {
             document.body.appendChild(this.container);
         },
 
-        mostrar(mensagem, tipo = 'info') {
+        mostrar(mensagem, tipo = 'sucesso') {
             const toast = document.createElement('div');
             toast.className = `toast toast-${tipo}`;
             toast.setAttribute('role', 'alert');
-            toast.setAttribute('aria-live', 'polite');
 
-            const icones = {
-                sucesso: '✅',
-                erro: '⚠️',
-                info: 'ℹ️',
-                aviso: '⚡'
-            };
+            const icone = tipo === 'erro' ? '⚠️' : '💌';
 
             toast.innerHTML = `
-                <span class="toast-icone">${icones[tipo] || '💬'}</span>
+                <span class="toast-icone">${icone}</span>
                 <span class="toast-mensagem">${mensagem}</span>
-                <button class="toast-fechar" aria-label="Fechar notificação">&times;</button>
+                <button class="toast-fechar" aria-label="Fechar">&times;</button>
             `;
 
-            const btnFechar = toast.querySelector('.toast-fechar');
-            btnFechar.addEventListener('click', () => this.fechar(toast));
+            toast.querySelector('.toast-fechar')
+                 .addEventListener('click', () => this.fechar(toast));
 
             this.container.appendChild(toast);
-
-            // Animação de entrada
             requestAnimationFrame(() => toast.classList.add('toast-visivel'));
 
-            // Fecha automaticamente
-            setTimeout(() => this.fechar(toast), CONFIG.notificacaoDuracao);
+            setTimeout(() => this.fechar(toast), CONFIG.toastDuracao);
         },
 
         fechar(toast) {
+            if (!toast.isConnected) return;
             toast.classList.remove('toast-visivel');
             toast.classList.add('toast-fechando');
-            setTimeout(() => toast.remove(), 300);
+            setTimeout(() => toast.remove(), 400);
         }
     };
 
-    // ============================================
-    // FORMULÁRIO DE CONTATO
-    // ============================================
+    // ===== FORMULÁRIO =====
     const Formulario = {
-        form: null,
-
         init() {
-            this.form = document.querySelector('#form-contato');
-            if (!this.form) return;
+            const form = document.querySelector('#form-contato');
+            if (!form) return;
 
-            this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+            form.addEventListener('submit', (e) => this.enviar(e, form));
 
-            // Validação em tempo real com debounce
-            const campos = ['#nome', '#email', '#mensagem'];
-            campos.forEach(seletor => {
+            ['#nome', '#email', '#mensagem'].forEach(seletor => {
                 const campo = document.querySelector(seletor);
-                if (campo) {
-                    const validar = Utils.debounce(() => this.validarCampo(campo), CONFIG.debounceDelay);
-                    campo.addEventListener('input', validar);
-                    campo.addEventListener('blur', () => this.validarCampo(campo));
-                }
+                if (!campo) return;
+                campo.addEventListener('blur', () => this.validarCampo(campo));
+                campo.addEventListener('input',
+                    Utils.debounce(() => this.validarCampo(campo), CONFIG.debounceDelay));
             });
         },
 
-        async handleSubmit(event) {
+        enviar(event, form) {
             event.preventDefault();
 
             const nome = document.querySelector('#nome');
             const email = document.querySelector('#email');
             const mensagem = document.querySelector('#mensagem');
 
-            if (!this.validarTodosCampos(nome, email, mensagem)) {
-                Notificacao.mostrar('Corrija os campos destacados para continuar.', 'erro');
+            const tudoOk = [nome, email, mensagem]
+                .map(c => this.validarCampo(c))
+                .every(v => v);
+
+            if (!tudoOk) {
+                Toast.mostrar('Ops! Verifique os campos destacados. 🌸', 'erro');
                 return;
             }
 
-            // Simula envio (você pode integrar com Formspree/EmailJS)
-            this.setLoading(true);
+            this.loading(true, form);
 
-            await this.simularEnvio();
-
-            Notificacao.mostrar(`Obrigado ${nome.value.split(' ')[0]}! Sua mensagem foi enviada. 🌱`, 'sucesso');
-            this.form.reset();
-            this.limparErros();
-            this.setLoading(false);
+            // Simula envio (troque por Formspree/EmailJS quando quiser envio real)
+            setTimeout(() => {
+                this.loading(false, form);
+                Toast.mostrar(`Obrigado, ${nome.value.split(' ')[0]}! Sua mensagem foi enviada. 💗`);
+                form.reset();
+            }, 1400);
         },
 
         validarCampo(campo) {
-            this.limparErroCampo(campo);
-
-            if (campo.id === 'email' && campo.value.trim()) {
-                if (!Utils.validarEmail(campo.value)) {
-                    this.mostrarErroCampo(campo, 'Digite um e-mail válido (ex: nome@exemplo.com)');
-                    return false;
-                }
-            }
-
-            if (campo.id === 'nome' && campo.value.trim().length < 2) {
-                this.mostrarErroCampo(campo, 'Nome deve ter pelo menos 2 caracteres.');
-                return false;
-            }
-
-            if (campo.id === 'mensagem' && campo.value.trim().length < 10) {
-                this.mostrarErroCampo(campo, 'A mensagem deve ter pelo menos 10 caracteres.');
-                return false;
-            }
+            this.limparErro(campo);
 
             if (!campo.value.trim()) {
-                this.mostrarErroCampo(campo, 'Campo obrigatório.');
+                this.mostrarErro(campo, 'Este campo é obrigatório.');
                 return false;
             }
-
+            if (campo.id === 'email' && !Utils.emailValido(campo.value)) {
+                this.mostrarErro(campo, 'Digite um e-mail válido.');
+                return false;
+            }
+            if (campo.id === 'mensagem' && campo.value.trim().length < 10) {
+                this.mostrarErro(campo, 'Escreva pelo menos 10 caracteres.');
+                return false;
+            }
             return true;
         },
 
-        validarTodosCampos(nome, email, mensagem) {
-            const validacoes = [
-                this.validarCampo(nome),
-                this.validarCampo(email),
-                this.validarCampo(mensagem)
-            ];
-            return validacoes.every(v => v);
-        },
-
-        mostrarErroCampo(campo, mensagem) {
+        mostrarErro(campo, msg) {
             campo.classList.add('campo-erro');
             const span = document.createElement('span');
             span.className = 'mensagem-erro';
-            span.textContent = mensagem;
-            campo.parentNode.insertBefore(span, campo.nextSibling);
+            span.textContent = msg;
+            campo.insertAdjacentElement('afterend', span);
         },
 
-        limparErroCampo(campo) {
+        limparErro(campo) {
             campo.classList.remove('campo-erro');
-            const erro = campo.parentNode.querySelector('.mensagem-erro');
+            const erro = campo.parentElement.querySelector('.mensagem-erro');
             if (erro) erro.remove();
         },
 
-        limparErros() {
-            document.querySelectorAll('.mensagem-erro').forEach(el => el.remove());
-            document.querySelectorAll('.campo-erro').forEach(el => el.classList.remove('campo-erro'));
-        },
-
-        setLoading(estado) {
-            const btn = this.form.querySelector('button[type="submit"]');
-            if (!btn) return;
-
-            if (estado) {
+        loading(ativo, form) {
+            const btn = form.querySelector('button[type="submit"]');
+            if (ativo) {
+                btn.dataset.original = btn.innerHTML;
                 btn.disabled = true;
-                btn.dataset.textoOriginal = btn.textContent;
                 btn.innerHTML = '<span class="spinner"></span> Enviando...';
             } else {
                 btn.disabled = false;
-                btn.textContent = btn.dataset.textoOriginal || 'Enviar Sugestão';
+                btn.innerHTML = btn.dataset.original || 'Enviar com carinho 💌';
             }
-        },
-
-        simularEnvio() {
-            return new Promise(resolve => setTimeout(resolve, 1500));
         }
     };
 
-    // ============================================
-    // NAVEGAÇÃO SUAVE + SCROLL SPY
-    // ============================================
+    // ===== NAVEGAÇÃO SUAVE + SCROLL SPY =====
     const Navegacao = {
         init() {
-            this.configurarScrollSuave();
-            this.configurarScrollSpy();
-        },
-
-        configurarScrollSuave() {
-            document.querySelectorAll('nav a[href^="#"]').forEach(link => {
-                link.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    const href = link.getAttribute('href');
-                    const alvo = document.querySelector(href);
-
-                    if (alvo) {
-                        alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        history.pushState(null, null, href);
-                    }
+            document.querySelectorAll('a[href^="#"]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const alvo = document.querySelector(link.getAttribute('href'));
+                    if (!alvo) return;
+                    e.preventDefault();
+                    alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
+            });
+
+            const secoes = document.querySelectorAll('section[id]');
+            const links = document.querySelectorAll('.menu a');
+
+            const observer = new IntersectionObserver((entradas) => {
+                entradas.forEach(entrada => {
+                    if (!entrada.isIntersecting) return;
+                    const id = entrada.target.id;
+                    links.forEach(link => {
+                        link.classList.toggle('link-ativo',
+                            link.getAttribute('href') === `#${id}`);
+                    });
+                });
+            }, { rootMargin: '-45% 0px -45% 0px' });
+
+            secoes.forEach(s => observer.observe(s));
+        }
+    };
+
+    // ===== MODO ESCURO =====
+    const Tema = {
+        init() {
+            const botao = document.querySelector('#alternar-tema');
+            if (!botao) return;
+
+            const salvo = localStorage.getItem(CONFIG.temaStorageKey);
+            const sistemaEscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (salvo === 'dark' || (!salvo && sistemaEscuro)) {
+                this.aplicar(true, botao);
+            }
+
+            botao.addEventListener('click', () => {
+                const escuro = document.body.classList.toggle('dark-mode');
+                this.aplicar(escuro, botao);
+                localStorage.setItem(CONFIG.temaStorageKey, escuro ? 'dark' : 'light');
             });
         },
 
-        configurarScrollSpy() {
-            const secoes = document.querySelectorAll('main section[id]');
-            const linksMenu = document.querySelectorAll('nav a[href^="#"]');
+        aplicar(escuro, botao) {
+            document.body.classList.toggle('dark-mode', escuro);
+            botao.textContent = escuro ? '☀️' : '🌙';
+            botao.setAttribute('aria-pressed', String(escuro));
+        }
+    };
 
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
+    // ===== ANIMAÇÕES AO ROLAR =====
+    const Animacoes = {
+        init() {
+            const elementos = document.querySelectorAll(
+                'section, .numero-card, footer'
+            );
+
+            const observer = new IntersectionObserver((entradas) => {
+                entradas.forEach(e => {
+                    if (e.isIntersecting) {
+                        e.target.classList.add('animacao-visivel');
+                        observer.unobserve(e.target);
+                    }
+                });
+            }, { threshold: 0.12 });
+
+            elementos.forEach(el => {
+                el.classList.add('animacao-entrada');
+                observer.observe(el);
+            });
+        }
+    };
+
+    // ===== VOLTAR AO TOPO =====
+    const Topo = {
+        init() {
+            const btn = document.createElement('button');
+            btn.className = 'btn-topo';
+            btn.setAttribute('aria-label', 'Voltar ao topo');
+            btn.textContent = '↑';
+            document.body.appendChild(btn);
+
+            window.addEventListener('scroll', Utils.debounce(() => {
+                btn.classList.toggle('visivel', window.scrollY > 400);
+            }, 100));
+
+            btn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    };
+
+    const init = () => {
+        Toast.init();
+        Formulario.init();
+        Navegacao.init();
+        Tema.init();
+        Animacoes.init();
+        Topo.init();
+        console.log('🌸 AGRINHO 2026 carregado com amor!');
+    };
+
+    return { init };
+})();
+
+document.addEventListener('DOMContentLoaded', AgrinhoApp.init);
