@@ -1,5 +1,6 @@
 /**
- * AGRINHO 2026 🌸 — Script principal
+ * AGRINHO 2026 🌾 — Script principal
+ * Campanha Cultive o Amanhã + funcionalidades do site
  */
 
 const AgrinhoApp = (() => {
@@ -39,7 +40,7 @@ const AgrinhoApp = (() => {
             toast.className = `toast toast-${tipo}`;
             toast.setAttribute('role', 'alert');
 
-            const icone = tipo === 'erro' ? '⚠️' : '💌';
+            const icone = tipo === 'erro' ? '⚠️' : '🌱';
 
             toast.innerHTML = `
                 <span class="toast-icone">${icone}</span>
@@ -61,6 +62,48 @@ const AgrinhoApp = (() => {
             toast.classList.remove('toast-visivel');
             toast.classList.add('toast-fechando');
             setTimeout(() => toast.remove(), 400);
+        }
+    };
+
+    // ===== CAMPANHA CULTIVE O AMANHÃ =====
+    const Campanha = {
+        init() {
+            const checkboxes = document.querySelectorAll('.acao-check');
+            if (!checkboxes.length) return;
+
+            // Carrega progresso salvo
+            checkboxes.forEach(cb => {
+                const salvo = localStorage.getItem(`acao-${cb.id}`) === 'true';
+                cb.checked = salvo;
+                cb.closest('.acao-card').classList.toggle('feito', salvo);
+            });
+
+            this.atualizarProgresso();
+
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', () => {
+                    localStorage.setItem(`acao-${cb.id}`, cb.checked);
+                    cb.closest('.acao-card').classList.toggle('feito', cb.checked);
+                    this.atualizarProgresso();
+
+                    const total = checkboxes.length;
+                    const feitos = document.querySelectorAll('.acao-check:checked').length;
+
+                    if (feitos === total) {
+                        Toast.mostrar('Parabéns! Você completou todas as ações da campanha! 🌷🎉');
+                    }
+                });
+            });
+        },
+
+        atualizarProgresso() {
+            const total = document.querySelectorAll('.acao-check').length;
+            const feitos = document.querySelectorAll('.acao-check:checked').length;
+            const texto = document.getElementById('progresso-texto');
+            const barra = document.getElementById('barra-progresso');
+
+            if (texto) texto.textContent = `${feitos} de ${total}`;
+            if (barra) barra.style.width = `${(feitos / total) * 100}%`;
         }
     };
 
@@ -93,13 +136,12 @@ const AgrinhoApp = (() => {
                 .every(v => v);
 
             if (!tudoOk) {
-                Toast.mostrar('Ops! Verifique os campos destacados. 🌸', 'erro');
+                Toast.mostrar('Ops! Verifique os campos destacados. 🌷', 'erro');
                 return;
             }
 
             this.loading(true, form);
 
-            // Simula envio (troque por Formspree/EmailJS quando quiser envio real)
             setTimeout(() => {
                 this.loading(false, form);
                 Toast.mostrar(`Obrigado, ${nome.value.split(' ')[0]}! Sua mensagem foi enviada. 💗`);
@@ -223,7 +265,7 @@ const AgrinhoApp = (() => {
                         observer.unobserve(e.target);
                     }
                 });
-            }, { threshold: 0.12 });
+            }, { threshold: 0.1 });
 
             elementos.forEach(el => {
                 el.classList.add('animacao-entrada');
@@ -253,12 +295,13 @@ const AgrinhoApp = (() => {
 
     const init = () => {
         Toast.init();
+        Campanha.init();
         Formulario.init();
         Navegacao.init();
         Tema.init();
         Animacoes.init();
         Topo.init();
-        console.log('🌸 AGRINHO 2026 carregado com amor!');
+        console.log('🌾 AGRINHO 2026 — Campanha Cultive o Amanhã carregada!');
     };
 
     return { init };
